@@ -413,5 +413,30 @@ exports.format = {
         test.equal(moment([2000, 0,  2]).format('[Q]Q-YYYY'), 'Q1-2000', 'Jan  2 2000 is Q1');
 
         test.done();
+    },
+
+    'extra formats' : function (test) {
+        moment.extraFormats['YYYY'] = function () {
+            return this.weekday();
+        };
+
+        test.equal(moment([1985, 1,  4]).format('Q YYYY'), '1 1', 'Extra format overrides existing ones');
+
+        moment.extraFormats['ABCD'] = function () {
+            return this.year();
+        };
+
+        test.equal(moment([1985, 1,  4]).format('Q ABCD'), '1 1985', 'New formats can be defined as functions');
+
+
+        moment.extraFormats['EFGH'] = '42';
+
+        test.equal(moment([1985, 1,  4]).format('Q EFGH'), '1 42', 'New formats can be defined as strings');
+
+        delete moment.extraFormats['YYYY'];
+        delete moment.extraFormats['ABCD'];
+        delete moment.extraFormats['EFGH'];
+
+        test.done();
     }
 };

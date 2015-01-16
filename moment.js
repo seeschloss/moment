@@ -283,6 +283,9 @@
             }
         },
 
+        // plugins can declare their own formats here
+        extraFormats = {},
+
         deprecations = {},
 
         lists = ['months', 'monthsShort', 'weekdays', 'weekdaysShort', 'weekdaysMin'],
@@ -1078,10 +1081,26 @@
     }
 
     function makeFormatFunction(format) {
-        var array = format.match(formattingTokens), i, length;
+        var extraPatterns = [];
+        for (i in extraFormats) {
+            if (hasOwnProp(extraFormats, i)) {
+                extraPatterns.push(i);
+            }
+        }
+
+        if (extraPatterns.length) {
+            var defaultPattern = formattingTokens.toString();
+            var pattern = new RegExp('(' + extraPatterns.join('|') + ')|' + defaultPattern.substring(1, defaultPattern.length - 2), 'g');
+        } else {
+            var pattern = formattingTokens;
+        }
+
+        var array = format.match(pattern), i, length;
 
         for (i = 0, length = array.length; i < length; i++) {
-            if (formatTokenFunctions[array[i]]) {
+            if (extraFormats[array[i]]) {
+                array[i] = extraFormats[array[i]];
+            } else if (formatTokenFunctions[array[i]]) {
                 array[i] = formatTokenFunctions[array[i]];
             } else {
                 array[i] = removeFormattingTokens(array[i]);
@@ -2050,6 +2069,9 @@
     // Plugins that add properties should also add the key here (null value),
     // so we can properly clone ourselves.
     moment.momentProperties = momentProperties;
+
+    // Plugins can declare extra formats here.
+    moment.extraFormats = extraFormats;
 
     // This function will be called whenever a moment is mutated.
     // It is intended to keep the offset in sync with the timezone.
